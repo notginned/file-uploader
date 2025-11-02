@@ -2,10 +2,11 @@
   "name": "file-uploader",
   "version": "1.0.0",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc",
-    "dev": "tsx  watch src/app.mts"
+    "build": "gulp build",
+    "dev": "gulp watchSrc"
   },
   "keywords": [],
   "author": "",
@@ -13,18 +14,27 @@
   "description": "",
   "devDependencies": {
     "@eslint/js": "^9.38.0",
+    "@types/bcrypt": "^6.0.0",
     "@types/express": "^5.0.3",
     "@types/node": "^24.1.0",
+    "@types/passport": "^1.0.17",
+    "@types/passport-local": "^1.0.38",
+    "del": "^8.0.1",
     "eslint": "^9.38.0",
     "globals": "^16.4.0",
+    "gulp": "^5.0.1",
+    "gulp-cli": "^3.1.0",
+    "gulp-typescript": "^6.0.0-alpha.1",
+    "nodemon": "^3.1.10",
     "prettier": "^3.6.2",
     "prisma": "^6.18.0",
-    "tsx": "^4.20.3",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.46.2"
   },
   "dependencies": {
+    "@prisma/client": "^6.18.0",
     "@quixo3/prisma-session-store": "^3.1.13",
+    "bcrypt": "^6.0.0",
     "connect-pg-simple": "^10.0.0",
     "dotenv": "^17.2.3",
     "ejs": "^3.1.10",
