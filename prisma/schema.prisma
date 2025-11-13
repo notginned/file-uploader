@@ -22,10 +22,11 @@ model Session {
 }
 
 model User {
-  id       Int    @id @default(autoincrement())
-  username String @unique @db.VarChar(25)
-  password String
-  files    File[]
+  id          Int            @id @default(autoincrement())
+  username    String         @unique @db.VarChar(25)
+  password    String
+  files       File[]
+  sharedFiles Shared_Files[]
 }
 
 model File {
@@ -45,6 +46,8 @@ model File {
 
 model Shared_Files {
   file      File     @relation(fields: [fileId], references: [id])
+  owner     User     @relation(fields: [ownerId], references: [id])
+  ownerId   Int
   fileId    String   @id @db.Uuid
   expiresAt DateTime
 }
