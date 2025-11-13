@@ -10,7 +10,7 @@ const validateUser: ValidationChain[] = [
 ];
 
 const signUpGet: RequestHandler = (req, res) => {
-  res.render("sign-up.ejs");
+  res.render("sign-up");
 };
 
 const signUpPostHandler: RequestHandler = async (req, res) => {
@@ -34,7 +34,7 @@ const signUpPostHandler: RequestHandler = async (req, res) => {
     },
   });
 
-  return res.render("/", { username });
+  return res.redirect("/");
 };
 
 const signUpPost = [...validateUser, signUpPostHandler];

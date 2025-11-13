@@ -11,8 +11,12 @@ type UserUpdateParams = UserWhereUniqueInput & UserUpdateInput;
 export class User {
   static #db = db.user;
 
+  // Not selecting the password bc we don't need it
   static async findById({ id }: UserWhereUniqueInput) {
-    return this.#db.findUnique({ where: { id } });
+    return this.#db.findUnique({
+      select: { username: true, id: true },
+      where: { id },
+    });
   }
 
   static async findByUsername({ username }: UserWhereUniqueInput) {

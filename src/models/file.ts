@@ -1,4 +1,7 @@
-import { FileWhereUniqueInput } from "../generated/prisma/models.js";
+import {
+  FileWhereInput,
+  FileWhereUniqueInput,
+} from "../generated/prisma/models.js";
 import { db } from "../utils/db.js";
 
 interface FileCreateArgs {
@@ -15,8 +18,12 @@ export class File {
     return this.#db.findUnique({ where: { id } });
   }
 
-  static async getChildrenByParentId({ parentId }: FileWhereUniqueInput) {
-    return this.#db.findMany({ where: { parentId } });
+  static async getChildrenByParentId({ parentId, ownerId }: FileWhereInput) {
+    return this.#db.findMany({ where: { parentId, ownerId} });
+  }
+
+  static async getFileMimeType({ id }: FileWhereUniqueInput) {
+    return this.#db.findUnique({ select: { type: true }, where: { id } });
   }
 
   // Folders

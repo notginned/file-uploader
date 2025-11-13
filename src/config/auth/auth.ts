@@ -20,7 +20,6 @@ export const strat = new LocalStrategy(async (username, password, done) => {
 });
 
 // Extracting the id and saving it into the session
-// @ts-expect-error Our user will always have an id
 passport.serializeUser((user, done) => done(null, user.id));
 
 // Retrieving and adding the user to the req

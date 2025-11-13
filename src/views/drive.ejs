@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drive</title>
+</head>
+<body>
+<h1>Drive</h1>
+      Welcome <%= user.username %>
+      <a href="/logout">Log out</a>
+<ul>
+<%- include('partials/upload-form') %>
+<% locals.files.forEach(file => { %>
+    <li><%= file.name %></li>
+<% }) %>
+</ul>
+</body>
+</html>
