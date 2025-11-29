@@ -1,26 +1,28 @@
 import { NextFunction, Request, RequestHandler, Response } from "express";
 import { upload } from "../config/storage/upload.js";
 import { File } from "../models/file.js";
+import path from "node:path";
 
 const uploadSingleFile = [
   upload.single("uploaded_file"),
-  (req: Request, res: Response, next: NextFunction) => {
-    if (!req.file) return next(new Error("No file found"));
-
-    const { originalname, destination } = req.file;
-
-    console.log("uploaded: ", originalname, "at ", destination);
-    next();
-  },
   async (req: Request, res: Response, next: NextFunction) => {
     if (!req.file) return next(new Error("Couldn't upload file"));
-
-    const name = req.file.originalname;
-    const parentId = req.query.id as string;
     if (!req.user) return;
 
+    const originalname = req.file.originalname;
+    const name = req.file.filename;
+    const destination = req.file.destination;
+    const parentId = req.query.id as string;
+
+    console.log({ name, destination });
+
     const ownerId = req.user.id;
-    await File.createFile({ name, parentId, ownerId });
+    await File.createFile({
+      name: originalname,
+      parentId,
+      ownerId,
+      path: destination + "/" + name,
+    });
     return res.redirect("/drive");
   },
 ];
@@ -28,31 +30,34 @@ const uploadSingleFile = [
 const getFolderContents: RequestHandler = async (req, res, next) => {
   if (!req.user) return next(new Error("No user found"));
 
-  const parentId = req.query.id as string;
+  // The id of the current folder is the parentId of its children
+  const parentId = req.params.id as string;
   const ownerId = req.user.id as number;
-  const contents = await File.getChildrenByParentId({ parentId, ownerId });
-  console.log({ contents });
 
-  return res.render("drive", { files: contents });
+  const files = await File.getChildrenByParentId({ parentId, ownerId });
+
+  console.log({ parentId, ownerId });
+  return res.render("drive", { files, parentId });
 };
 
 const downloadSingleFile: RequestHandler = async (req, res, next) => {
   if (!req.user) return next(new Error("No user found"));
 
   const ownerId = req.user.id as number;
-  const id = req.query.id as string;
+  const id = req.params.id as string;
 
   const file = await File.getFileById({ id });
 
   if (!file) return next(new Error("File not found"));
 
-  if (file.ownerId !== ownerId)
+  // Can only download files that belong to the user
+  // Can not download folders
+  if (file.ownerId !== ownerId || file.type !== "FILE") {
     return next(new Error("Not authorized to download this file"));
-  if (file.type !== "FILE")
-    return next(new Error("Not authorized to download this file"));
+  }
 
   // Files will always have an associated path
-  return res.sendFile(file.path!);
+  return res.sendFile(path.join(import.meta.dirname, "../../" + file.path!));
 };
 
 export { uploadSingleFile, getFolderContents, downloadSingleFile };

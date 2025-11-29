@@ -12,14 +12,16 @@ fileRouter.get("/download/{:id}", downloadSingleFile);
 
 fileRouter.post("/upload", uploadSingleFile);
 
-fileRouter.post("/folder/create", async (req, res) => {
-  // @ts-expect-error User will always have an id
-  const ownerId = req.user.id;
-  const { name, parentId } = req.body;
+fileRouter.post("/folder/create", async (req, res, next) => {
+  if (!req.user) return next(new Error("User not found"));
 
-  await File.createFile({ ownerId, name });
+  const ownerId = req.user.id;
+  const { name } = req.body;
+  const parentId = req.body.parentId || undefined;
+
+  await File.createFolder({ ownerId, name, parentId });
   return res.redirect(`/drive/${parentId}`);
 });
-fileRouter.get("/:fileId", () => {});
+fileRouter.get("/download/:id", downloadSingleFile);
 
 export { fileRouter };

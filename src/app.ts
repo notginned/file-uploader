@@ -36,13 +36,9 @@ app.get("/logout", (req, res, next) =>
     if (err) return next(err);
 
     res.redirect("/");
-  })
+  }),
 );
-app.use(
-  "/drive",
-  isAuthenticated,
-  fileRouter
-);
+app.use("/drive", isAuthenticated, fileRouter);
 
 app.listen(PORT, () => {
   console.log(`Running on http://localhost:${PORT}`);

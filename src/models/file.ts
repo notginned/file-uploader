@@ -6,6 +6,7 @@ import { db } from "../utils/db.js";
 
 interface FileCreateArgs {
   name: string;
+  path: string;
   ownerId: number;
   parentId?: string;
 }
@@ -19,7 +20,7 @@ export class File {
   }
 
   static async getChildrenByParentId({ parentId, ownerId }: FileWhereInput) {
-    return this.#db.findMany({ where: { parentId, ownerId} });
+    return this.#db.findMany({ where: { parentId, ownerId } });
   }
 
   static async getFileMimeType({ id }: FileWhereUniqueInput) {
@@ -27,7 +28,11 @@ export class File {
   }
 
   // Folders
-  static async createFolder({ name, parentId, ownerId }: FileCreateArgs) {
+  static async createFolder({
+    name,
+    parentId,
+    ownerId,
+  }: Omit<FileCreateArgs, "path">) {
     return this.#db.create({ data: { name, type: "DIR", ownerId, parentId } });
   }
 
@@ -44,8 +49,10 @@ export class File {
   }
 
   // Files
-  static async createFile({ name, parentId, ownerId }: FileCreateArgs) {
-    return this.#db.create({ data: { name, type: "FILE", ownerId, parentId } });
+  static async createFile({ name, parentId, ownerId, path }: FileCreateArgs) {
+    return this.#db.create({
+      data: { name, type: "FILE", ownerId, path, parentId },
+    });
   }
 
   static async deleteFileById({

@@ -11,8 +11,13 @@
       <a href="/logout">Log out</a>
 <ul>
 <%- include('partials/upload-form') %>
+<%- include('partials/create-folder-form', { parentId }) %>
 <% locals.files.forEach(file => { %>
-    <li><%= file.name %></li>
+    <% if (file.type === 'DIR') { %>
+        <li><a href="<%= `/drive/${file.id}` %>"><%= file.name %></a></li>
+    <% } else { %>
+        <li><a href="<%= `/drive/download/${file.id}` %>"><%= file.name %></a></li>
+    <% } %>
 <% }) %>
 </ul>
 </body>
