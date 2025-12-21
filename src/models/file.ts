@@ -1,67 +1,76 @@
 import {
-  FileWhereInput,
-  FileWhereUniqueInput,
+    FileWhereUniqueInput,
 } from "../generated/prisma/models.js";
+import { getAllChildren } from "../generated/prisma/sql.js";
 import { db } from "../utils/db.js";
 
 interface FileCreateArgs {
-  name: string;
-  path: string;
-  ownerId: number;
-  parentId?: string;
+    name: string;
+    path: string;
+    ownerId: number;
+    parentId?: string;
+}
+
+interface FileSelectArgs {
+    parentId: string | null;
+    ownerId: number;
 }
 
 export class File {
-  static #db = db.file;
+    static #db = db.file;
 
-  // Getters
-  static async getFileById({ id }: FileWhereUniqueInput) {
-    return this.#db.findUnique({ where: { id } });
-  }
+    // Getters
+    static async getFileById({ id }: FileWhereUniqueInput) {
+        return this.#db.findUnique({ where: { id } });
+    }
 
-  static async getChildrenByParentId({ parentId, ownerId }: FileWhereInput) {
-    return this.#db.findMany({ where: { parentId, ownerId } });
-  }
+    static async getChildrenByParentId({ parentId, ownerId }: FileSelectArgs) {
+        return this.#db.findMany({ where: { parentId, ownerId } });
+    }
 
-  static async getFileMimeType({ id }: FileWhereUniqueInput) {
-    return this.#db.findUnique({ select: { type: true }, where: { id } });
-  }
+    static async getAllChildrenByParentId({ parentId, ownerId }: FileSelectArgs) {
+        return db.$queryRawTyped(getAllChildren(parentId, ownerId))
+    }
 
-  // Folders
-  static async createFolder({
-    name,
-    parentId,
-    ownerId,
-  }: Omit<FileCreateArgs, "path">) {
-    return this.#db.create({ data: { name, type: "DIR", ownerId, parentId } });
-  }
+    static async getFileMimeType({ id }: FileWhereUniqueInput) {
+        return this.#db.findUnique({ select: { type: true }, where: { id } });
+    }
 
-  static async updateFolderById({
-    id,
-    ownerId,
-    newName,
-  }: {
-    id: string;
-    ownerId: number;
-    newName: string;
-  }) {
-    return this.#db.update({ where: { id, ownerId }, data: { name: newName } });
-  }
+    // Folders
+    static async createFolder({
+        name,
+        parentId,
+        ownerId,
+    }: Omit<FileCreateArgs, "path">) {
+        return this.#db.create({ data: { name, type: "DIR", ownerId, parentId } });
+    }
 
-  // Files
-  static async createFile({ name, parentId, ownerId, path }: FileCreateArgs) {
-    return this.#db.create({
-      data: { name, type: "FILE", ownerId, path, parentId },
-    });
-  }
+    static async updateFolderById({
+        id,
+        ownerId,
+        newName,
+    }: {
+        id: string;
+        ownerId: number;
+        newName: string;
+    }) {
+        return this.#db.update({ where: { id, ownerId }, data: { name: newName } });
+    }
 
-  static async deleteFileById({
-    id,
-    ownerId,
-  }: {
-    id: string;
-    ownerId: number;
-  }) {
-    return this.#db.delete({ where: { id, ownerId } });
-  }
+    // Files
+    static async createFile({ name, parentId, ownerId, path }: FileCreateArgs) {
+        return this.#db.create({
+            data: { name, type: "FILE", ownerId, path, parentId },
+        });
+    }
+
+    static async deleteFileById({
+        id,
+        ownerId,
+    }: {
+        id: string;
+        ownerId: number;
+    }) {
+        return this.#db.delete({ where: { id, ownerId } });
+    }
 }
