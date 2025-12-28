@@ -19,8 +19,8 @@ fileRouter.post("/folder/create", async (req, res, next) => {
     const { name } = req.body;
     const parentId = req.body.parentId || undefined;
 
-    await File.createFolder({ ownerId, name, parentId });
-    return res.redirect(`/drive/${parentId}`);
+    const { id } =  await File.createFolder({ ownerId, name, parentId });
+    return res.redirect(`/drive/${id}`);
 });
 fileRouter.get("/download/:id", downloadSingleFile);
 

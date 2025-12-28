@@ -12,11 +12,11 @@ const uploadSingleFile = [
         const originalname = req.file.originalname;
         const name = req.file.filename;
         const destination = req.file.destination;
-        const { parentId } = req.body;
+        const parentId = req.body.parentId || undefined;
 
-        console.log({ name, destination, parentId });
 
         const ownerId = req.user.id;
+        console.log({ name, destination, parentId, ownerId });
         await File.createFile({
             name: originalname,
             parentId,
@@ -35,7 +35,7 @@ const getFolderContents: RequestHandler = async (req, res, next) => {
     const ownerId = req.user.id as number;
 
     const files = await File.getChildrenByParentId({
-        parentId: parentId ?? null,
+        parentId: parentId ?? undefined,
         ownerId,
     });
 
@@ -46,7 +46,6 @@ const getFolderContents: RequestHandler = async (req, res, next) => {
         console.error('error', e)
         console.error(parentId, ownerId)
     }
-
 
     return res.render("drive", { files, parentId });
 };
