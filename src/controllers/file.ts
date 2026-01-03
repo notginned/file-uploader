@@ -3,7 +3,7 @@ import { upload } from "../config/storage/upload.js";
 import { File } from "../models/file.js";
 import path from "node:path";
 import { supabase } from "../utils/db.js";
-import { unlink } from "node:fs/promises";
+import { readFile, unlink } from "node:fs/promises";
 
 const uploadSingleFile = [
     upload.single("uploaded_file"),
@@ -16,28 +16,30 @@ const uploadSingleFile = [
         const destination = req.file.destination;
         const parentId = req.body.parentId || undefined;
         const ownerId = req.user.id;
-        const username = req.user.username;
 
-        console.log({ name, destination, parentId, ownerId });
-        const path = destination + "/" + name;
+        const { id } = await File.createFile({
+            name: originalname,
+            parentId,
+            ownerId,
+        });
 
-        const { data, error } = await supabase.storage.from(username).upload(path, req.file.buffer);
+        const file = await readFile(req.file.path);
 
-        if (!error) {
-            await File.createFile({
-                name: originalname,
-                parentId,
-                ownerId,
-            });
-            return res.redirect("/drive");
-        }
+        const { data, error } = await supabase.storage
+            .from(ownerId.toString())
+            .upload(id, file, { contentType: req.file.mimetype });
 
+        console.log('db: ', { id, name, destination, parentId, ownerId });
         console.log("uploaded file", data);
+
+        if (error) {
+            return res.render("drive", { error });
+        }
 
         // Deleting the file from disk
         await unlink(req.file.path)
 
-        return res.render("drive", { error });
+        return res.redirect("/drive");
     },
 ];
 
@@ -60,7 +62,7 @@ const getFolderContents: RequestHandler = async (req, res, next) => {
     const ownerId = req.user.id as number;
 
     const files = await File.getChildrenByParentId({
-        parentId: parentId ?? undefined,
+        parentId: parentId ?? null,
         ownerId,
     });
 
@@ -92,7 +94,17 @@ const downloadSingleFile: RequestHandler = async (req, res, next) => {
     }
 
     // Files will always have an associated path
-    return res.sendFile(path.join(import.meta.dirname, "../../" + file.path!));
+    // TODO: Add downloading
+    const path = `${ownerId}/${id}`;
+
+    console.log('path', path);
+    const { data, error } = await supabase.storage.from(ownerId.toString()).createSignedUrl(id, 60);
+
+    console.log(data);
+
+    if (error) return res.status(400).send(error);
+
+    return res.status((200)).redirect(data.signedUrl);
 };
 
 export { uploadSingleFile, createFolder, getFolderContents, downloadSingleFile };

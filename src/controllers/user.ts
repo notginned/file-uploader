@@ -27,14 +27,15 @@ const signUpPostHandler: RequestHandler = async (req, res) => {
     const numRounds = 10;
 
     const hashedPass = await bcrypt.hash(password, numRounds);
-    const userStorage = await supabase.storage.createBucket(username);
 
-    await User.create({
+    const { id }  = await User.create({
         data: {
             username,
             password: hashedPass,
         },
     });
+
+    const userStorage = await supabase.storage.createBucket(id.toString());
 
     console.log("created storage", userStorage);
 
