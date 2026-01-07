@@ -7,10 +7,18 @@
 </head>
 <body>
 <h1>Drive</h1>
+    <a href="/">Home</a>
       Welcome <%= user.username %>
       <a href="/logout">Log out</a>
 <ul>
-<h3><%= locals.folderName %></h3>
+<h3><%= locals.folderName ?? "Drive" %></h3>
+<% if (locals.folderName !== undefined) { %>
+    <form action="<%= `/drive/${parentId}/rename` %>" method="POST">
+    <input type="hidden" name="id" value="<%= locals.parentId %>">
+    <input type="text" name="name" value="<%= locals.folderName %>">
+    <button type="submit">Rename</button>
+</form>
+<% } %>
 <%- include('partials/upload-form', { parentId } ) %>
 <%- include('partials/create-folder-form', { parentId }) %>
 <% locals.files.forEach(file => { %>

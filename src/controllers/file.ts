@@ -28,9 +28,6 @@ const uploadSingleFile = [
             .from(ownerId.toString())
             .upload(id, file, { contentType: req.file.mimetype });
 
-        // console.log('db: ', { id, name, destination, parentId, ownerId });
-        // console.log("uploaded file", data);
-
         if (error) {
             return res.render("drive", { error });
         }
@@ -53,6 +50,21 @@ const createFolder: RequestHandler = async (req, res, next) => {
     return res.redirect(`/drive/${id}`);
 };
 
+const renameFolder: RequestHandler = async (req, res, next) => {
+    if (!req.user) return next(new Error("User not found"));
+
+    const ownerId = req.user.id;
+    const { id } = req.params;
+    const { name } = req.body;
+
+    try {
+        await File.updateFolderById({ id, newName: name, ownerId });
+        res.redirect(`/drive/${id}`);
+    } catch (e) {
+        return next(e);
+    }
+}
+
 const getFolderContents: RequestHandler = async (req, res, next) => {
     if (!req.user) return next(new Error("No user found"));
 
@@ -65,15 +77,9 @@ const getFolderContents: RequestHandler = async (req, res, next) => {
         ownerId,
     });
 
-    const folder = parentId ? await File.getFileById({ id: parentId, ownerId }) : { name: "Drive" };
+    const folder = parentId && await File.getFileById({ id: parentId, ownerId });
 
-    try {
-        const allChildren = await File.getAllChildrenByParentId({ parentId, ownerId });
-        // console.log(allChildren);
-    } catch (e) {
-        console.error('error', e)
-        console.error(parentId, ownerId)
-    }
+    if (folder === "") return next(new Error("Cannot find folder"));
 
     return res.render("drive", { files, parentId, folderName: folder?.name });
 };
@@ -96,8 +102,6 @@ const downloadSingleFile: RequestHandler = async (req, res, next) => {
 
     // Files will always have an associated path
     // TODO: Add downloading
-    const path = `${ownerId}/${id}`;
-
     const { data, error } = await supabase.storage.from(ownerId.toString()).createSignedUrl(id, 60);
 
     if (error) return res.status(400).send(error);
@@ -142,7 +146,6 @@ const deleteFolder: RequestHandler = async (req, res, next) => {
 
         const { data, error } = await supabase.storage.from(ownerId.toString()).remove(fileIds);
 
-        console.log('deleted', { data, error });
         res.redirect('/drive');
     } catch (e) {
         return next(e);
@@ -169,4 +172,4 @@ const deleteResource: RequestHandler = async (req, res, next) => {
     }
 }
 
-export { uploadSingleFile, createFolder, getFolderContents, downloadSingleFile, deleteResource };
+export { uploadSingleFile, createFolder, getFolderContents, downloadSingleFile, deleteResource, renameFolder };
